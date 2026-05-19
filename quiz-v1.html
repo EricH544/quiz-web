@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>民宿宅學堂 Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #c9a227; --gold-light: #f0d060; --gold-dim: #7a6010;
+  --dark: #080c1e; --panel: #0d1540; --panel2: #111d4a;
+  --border: #1e3a8a; --border2: #2a5cb8;
+  --teal: #1D9E75; --teal-light: #5dcaa5;
+  --red: #c0392b; --red-light: #e74c3c;
+  --text: #e8d9b0; --text2: #8899cc; --text3: #4a5a8a;
+  --correct: #14532d; --wrong: #7f1d1d;
+  --radius: 12px; --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--dark); color: var(--text); font-family: 'Noto Sans TC', sans-serif; min-height: 100vh; }
+
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; }
+.screen.active { display: flex; }
+
+/* ── LOBBY ── */
+#lobby { background: radial-gradient(ellipse at 50% 30%, #1a2a6c 0%, var(--dark) 70%); }
+.lobby-title { font-family: 'Noto Serif TC', serif; font-size: clamp(28px, 6vw, 52px); font-weight: 900; color: var(--gold); text-align: center; letter-spacing: 4px; margin-bottom: 0.5rem; }
+.lobby-sub { color: var(--text2); text-align: center; margin-bottom: 2.5rem; font-size: 15px; }
+.role-cards { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; }
+.role-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem 2.5rem; cursor: pointer; transition: all 0.2s; text-align: center; min-width: 200px; }
+.role-card:hover { border-color: var(--gold); background: var(--panel2); transform: translateY(-3px); }
+.role-card .icon { font-size: 40px; margin-bottom: 0.75rem; }
+.role-card h3 { font-size: 18px; color: var(--gold); margin-bottom: 0.5rem; }
+.role-card p { font-size: 13px; color: var(--text2); }
+.room-section { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; width: 100%; max-width: 400px; }
+.room-section h4 { color: var(--gold); margin-bottom: 1rem; font-size: 15px; letter-spacing: 1px; }
+.inp { width: 100%; padding: 10px 14px; background: var(--dark); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); font-size: 15px; font-family: inherit; margin-bottom: 10px; }
+.inp:focus { outline: none; border-color: var(--gold); }
+.btn { padding: 11px 24px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 14px; font-family: inherit; font-weight: 700; transition: all 0.15s; }
+.btn-gold { background: var(--gold); color: #000; }
+.btn-gold:hover { background: var(--gold-light); }
+.btn-ghost { background: none; color: var(--text2); border: 1px solid var(--border2); }
+.btn-ghost:hover { color: var(--text); border-color: var(--gold); }
+.btn-teal { background: var(--teal); color: #fff; }
+.btn-teal:hover { background: var(--teal-light); }
+.btn-red { background: var(--red); color: #fff; }
+.btn-red:hover { background: var(--red-light); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.room-code-display { font-family: monospace; font-size: 28px; letter-spacing: 8px; color: var(--gold); text-align: center; padding: 1rem; background: var(--dark); border-radius: var(--radius-sm); margin: 0.5rem 0 1rem; border: 1px solid var(--gold-dim); }
+
+/* ── WAITING ROOM ── */
+#waiting { background: radial-gradient(ellipse at 50% 20%, #0d2240 0%, var(--dark) 70%); }
+.waiting-title { font-family: 'Noto Serif TC', serif; font-size: 24px; color: var(--gold); margin-bottom: 0.5rem; }
+.player-list { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 8px; margin: 1rem 0; }
+.player-item { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 16px; display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.player-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--teal); }
+.player-item.host .dot { background: var(--gold); }
+
+/* ── CONTESTANT GAME ── */
+#contestant-game { background: var(--dark); padding: 1rem; align-items: stretch; justify-content: flex-start; }
+.game-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: var(--panel); border-bottom: 1px solid var(--gold); border-radius: var(--radius) var(--radius) 0 0; margin-bottom: 1rem; }
+.player-name-badge { font-size: 14px; color: var(--gold); font-weight: 700; }
+.progress-text { font-size: 13px; color: var(--text2); }
+
+/* Category grid */
+.category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1rem; }
+.cat-cell { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem 0.75rem; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.cat-cell:hover:not(.done):not(.locked):not(.active-cat) { border-color: var(--gold); background: var(--panel2); transform: translateY(-2px); }
+.cat-cell.done { background: var(--correct); border-color: #4ade80; opacity: 0.7; cursor: default; }
+.cat-cell.locked { opacity: 0.3; cursor: not-allowed; }
+.cat-cell.final { border-color: var(--gold); background: linear-gradient(135deg, #1a1000, #2a2000); }
+.cat-cell.final.unlocked { animation: pulse-gold 2s infinite; }
+.cat-cell.active-cat { border-color: var(--gold-light); background: var(--panel2); }
+@keyframes pulse-gold { 0%,100%{box-shadow:0 0 0 0 rgba(201,162,39,0.4)} 50%{box-shadow:0 0 0 8px rgba(201,162,39,0)} }
+.cat-icon { font-size: 22px; }
+.cat-name { font-size: 12px; color: var(--text2); font-weight: 500; }
+.cat-cell.done .cat-name { color: #4ade80; }
+.cat-check { position: absolute; top: 6px; right: 6px; font-size: 14px; }
+
+/* Question area */
+.question-area { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+.q-type-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 0.75rem; }
+.qb-mc { background: #0f2060; color: #85b7eb; border: 1px solid var(--border2); }
+.qb-qa { background: #0f3020; color: #5dcaa5; border: 1px solid var(--teal); }
+.qb-music { background: #2a0f40; color: #c085eb; border: 1px solid #7c3ab8; }
+.q-text { font-size: 17px; line-height: 1.6; margin-bottom: 1rem; }
+.mc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mc-btn { background: var(--panel2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text); font-size: 14px; font-family: inherit; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 10px; transition: all 0.15s; }
+.mc-btn:hover { border-color: var(--gold); }
+.mc-btn.selected { border-color: var(--gold-light); background: #1e3a8a; }
+.letter-badge { background: var(--border2); border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; color: var(--gold-light); }
+.music-player { display: flex; align-items: center; gap: 12px; background: var(--dark); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 1rem; }
+.play-btn { background: var(--gold); border: none; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.play-btn:hover { background: var(--gold-light); }
+.music-info { flex: 1; }
+.music-title { font-size: 13px; color: var(--text2); }
+.music-status { font-size: 12px; color: var(--teal-light); margin-top: 2px; }
+.waiting-host { text-align: center; padding: 1rem; color: var(--text2); font-size: 14px; animation: blink 1.5s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* Powerups */
+.powerups-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 1rem; }
+.powerup { background: var(--panel); border: 1px solid var(--border2); border-radius: var(--radius-sm); width: 72px; height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; transition: all 0.15s; position: relative; }
+.powerup:hover:not(.used) { border-color: var(--gold); background: var(--panel2); }
+.powerup.used { opacity: 0.25; cursor: not-allowed; filter: grayscale(1); }
+.powerup-icon { font-size: 22px; }
+.powerup-name { font-size: 10px; color: var(--text2); text-align: center; line-height: 1.2; }
+
+/* Tooltip */
+.tooltip { display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--panel2); border: 1px solid var(--gold-dim); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: var(--text); width: 160px; text-align: center; z-index: 100; pointer-events: none; white-space: normal; }
+.powerup:hover .tooltip { display: block; }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--panel); border: 1px solid var(--gold); border-radius: var(--radius); padding: 1.5rem; width: min(400px, 90vw); }
+.modal h3 { color: var(--gold); margin-bottom: 0.75rem; font-size: 18px; }
+.modal p { color: var(--text2); font-size: 14px; line-height: 1.6; margin-bottom: 1.25rem; }
+.modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* Result overlay */
+.result-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 150; align-items: center; justify-content: center; flex-direction: column; gap: 1.5rem; }
+.result-overlay.open { display: flex; }
+.result-icon { font-size: 72px; animation: pop 0.4s ease; }
+@keyframes pop { 0%{transform:scale(0)} 80%{transform:scale(1.15)} 100%{transform:scale(1)} }
+.result-text { font-family: 'Noto Serif TC', serif; font-size: 32px; font-weight: 900; }
+.result-text.correct { color: #4ade80; }
+.result-text.wrong { color: #f87171; }
+
+/* ── HOST GAME ── */
+#host-game { background: var(--dark); padding: 1rem; align-items: stretch; justify-content: flex-start; }
+.host-header { background: var(--panel); border: 1px solid var(--gold); border-radius: var(--radius); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.host-title { font-family: 'Noto Serif TC', serif; font-size: 18px; color: var(--gold); }
+.current-player { font-size: 13px; color: var(--text2); }
+.host-question-box { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+.answer-reveal { background: var(--dark); border: 1px solid var(--teal); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; gap: 10px; margin-top: 1rem; }
+.answer-label { font-size: 11px; color: var(--teal-light); letter-spacing: 1px; font-weight: 700; min-width: 40px; }
+.answer-value { font-size: 16px; color: var(--text); font-weight: 700; }
+.judge-row { display: flex; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; }
+.judge-row .btn { flex: 1; min-width: 100px; padding: 14px; font-size: 16px; }
+.players-overview { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+.players-overview h4 { color: var(--gold); font-size: 13px; margin-bottom: 0.75rem; letter-spacing: 1px; }
+.player-progress { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.player-progress:last-child { border-bottom: none; }
+.progress-dots { display: flex; gap: 4px; }
+.pdot { width: 12px; height: 12px; border-radius: 3px; background: var(--border); }
+.pdot.done { background: var(--teal); }
+.pdot.final { background: var(--gold); }
+.no-question { text-align: center; color: var(--text2); padding: 2rem; font-size: 14px; }
+
+/* Toasts */
+.toast { position: fixed; top: 1rem; right: 1rem; background: var(--panel2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 16px; font-size: 13px; color: var(--text); z-index: 999; animation: slide-in 0.3s ease; }
+@keyframes slide-in { from{transform:translateX(120%)} to{transform:translateX(0)} }
+
+/* Utils */
+.flex-col { display: flex; flex-direction: column; gap: 10px; }
+.text-center { text-align: center; }
+.mt1 { margin-top: 1rem; }
+.tag-info { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 20px; background: var(--panel2); color: var(--text2); border: 1px solid var(--border); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOBBY ══════════════ -->
+<div class="screen active" id="lobby">
+  <div class="lobby-title">民宿宅學堂</div>
+  <div class="lobby-sub">選擇你的角色開始遊戲</div>
+  <div class="role-cards">
+    <div class="role-card" onclick="showRolePanel('host')">
+      <div class="icon">🎤</div>
+      <h3>主持人</h3>
+      <p>建立房間<br>判定答案</p>
+    </div>
+    <div class="role-card" onclick="showRolePanel('contestant')">
+      <div class="icon">🏆</div>
+      <h3>參賽者</h3>
+      <p>加入房間<br>挑戰題目</p>
+    </div>
+  </div>
+
+  <!-- Host panel -->
+  <div class="room-section" id="host-panel" style="display:none;">
+    <h4>🎤 主持人 — 建立房間</h4>
+    <input class="inp" id="host-name" placeholder="輸入你的名稱" maxlength="12">
+    <button class="btn btn-gold" onclick="createRoom()" style="width:100%">建立房間</button>
+    <div id="room-code-area" style="display:none;">
+      <div style="font-size:13px;color:var(--text2);margin-top:1rem;margin-bottom:4px;">房間碼（讓參賽者輸入）</div>
+      <div class="room-code-display" id="room-code-text"></div>
+      <button class="btn btn-teal" onclick="goWaiting()" style="width:100%">進入等待室</button>
+    </div>
+  </div>
+
+  <!-- Contestant panel -->
+  <div class="room-section" id="contestant-panel" style="display:none;">
+    <h4>🏆 參賽者 — 加入房間</h4>
+    <input class="inp" id="contestant-name" placeholder="輸入你的名稱" maxlength="12">
+    <input class="inp" id="room-code-input" placeholder="輸入房間碼" maxlength="6" style="letter-spacing:4px;text-transform:uppercase">
+    <button class="btn btn-gold" onclick="joinRoom()" style="width:100%">加入房間</button>
+  </div>
+</div>
+
+<!-- ══════════════ WAITING ROOM ══════════════ -->
+<div class="screen" id="waiting">
+  <div class="waiting-title">等待室</div>
+  <div style="font-size:13px;color:var(--text2);margin-bottom:1rem;">房間碼：<span id="waiting-room-code" style="color:var(--gold);font-weight:700;letter-spacing:3px;"></span></div>
+  <div class="player-list" id="waiting-player-list"></div>
+  <div id="host-start-btn" style="display:none;margin-top:1rem;">
+    <button class="btn btn-gold" onclick="startGame()" style="min-width:200px;">▶ 開始遊戲</button>
+  </div>
+  <div id="waiting-for-host" style="display:none;">
+    <div class="waiting-host">等待主持人開始遊戲…</div>
+  </div>
+</div>
+
+<!-- ══════════════ CONTESTANT GAME ══════════════ -->
+<div class="screen" id="contestant-game">
+  <div style="width:100%;max-width:680px;">
+    <div class="game-header">
+      <span class="player-name-badge" id="cg-name"></span>
+      <span class="progress-text" id="cg-progress">已完成 0 / 10</span>
+    </div>
+
+    <!-- Category grid -->
+    <div class="category-grid" id="cat-grid"></div>
+
+    <!-- Question area (hidden until cat selected) -->
+    <div id="question-area" style="display:none;">
+      <div class="question-area">
+        <span class="q-type-badge" id="q-type-badge"></span>
+        <div class="q-text" id="q-text"></div>
+
+        <!-- MC options -->
+        <div class="mc-grid" id="mc-options" style="display:none;"></div>
+
+        <!-- QA -->
+        <div id="qa-area" style="display:none;">
+          <div style="font-size:13px;color:var(--text2);">口頭回答題目，由主持人判定。</div>
+        </div>
+
+        <!-- Music -->
+        <div id="music-area" style="display:none;">
+          <div class="music-player">
+            <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+            <div class="music-info">
+              <div class="music-title">點擊播放音樂</div>
+              <div class="music-status" id="music-status">準備播放</div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text2);">聆聽後口頭作答，由主持人判定。</div>
+        </div>
+
+        <div class="waiting-host" id="waiting-judge" style="display:none;">等待主持人判定…</div>
+      </div>
+
+      <!-- Powerups -->
+      <div class="powerups-row" id="powerups-row"></div>
+
+      <div style="text-align:center;">
+        <button class="btn btn-gold" id="submit-btn" onclick="submitAnswer()" style="display:none;min-width:160px;">確認作答</button>
+      </div>
+    </div>
+
+    <!-- Idle message -->
+    <div id="idle-msg" style="text-align:center;color:var(--text2);font-size:14px;padding:1.5rem;">↑ 點選上方類別開始作答</div>
+  </div>
+</div>
+
+<!-- ══════════════ HOST GAME ══════════════ -->
+<div class="screen" id="host-game">
+  <div style="width:100%;max-width:520px;">
+    <div class="host-header">
+      <span class="host-title">🎤 主持人控制台</span>
+      <span class="current-player" id="host-current-player">等待參賽者選題…</span>
+    </div>
+
+    <div id="host-no-question" class="no-question">
+      <div style="font-size:36px;margin-bottom:0.5rem;">⏳</div>
+      等待參賽者選擇類別…
+    </div>
+
+    <div id="host-question-panel" style="display:none;">
+      <div class="host-question-box">
+        <span class="q-type-badge" id="host-q-type-badge"></span>
+        <div class="q-text" id="host-q-text" style="margin-bottom:0;"></div>
+        <div class="answer-reveal">
+          <span class="answer-label">答案</span>
+          <span class="answer-value" id="host-answer"></span>
+        </div>
+      </div>
+      <div class="judge-row">
+        <button class="btn btn-teal" onclick="judgeAnswer(true)">✓ 答對</button>
+        <button class="btn btn-red" onclick="judgeAnswer(false)">✗ 答錯</button>
+        <button class="btn btn-ghost" onclick="redrawQuestion()">🔄 換題</button>
+      </div>
+    </div>
+
+    <div class="players-overview">
+      <h4>參賽者進度</h4>
+      <div id="players-overview-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Powerup confirm modal -->
+<div class="modal-overlay" id="powerup-modal">
+  <div class="modal">
+    <h3 id="pu-modal-title">使用道具卡</h3>
+    <p id="pu-modal-desc"></p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closePowerupModal()">取消</button>
+      <button class="btn btn-gold" onclick="confirmPowerup()">確定使用</button>
+    </div>
+  </div>
+</div>
+
+<!-- Result overlay -->
+<div class="result-overlay" id="result-overlay">
+  <div class="result-icon" id="result-icon"></div>
+  <div class="result-text" id="result-text"></div>
+  <button class="btn btn-ghost" onclick="closeResult()">繼續</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ── FIREBASE CONFIG ──────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyBei-lR8aZqE6KNdRqQSqWbPNlGytEhOoY",
+  authDomain: "quiz-app-9399b.firebaseapp.com",
+  databaseURL: "https://quiz-app-9399b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "quiz-app-9399b",
+  storageBucket: "quiz-app-9399b.firebasestorage.app",
+  messagingSenderId: "274073889638",
+  appId: "1:274073889638:web:1c1043e7a5c1229b2df6a7"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ════════════════════════════════════════════════════════
+// ── 如何修改類別名稱 ──────────────────────────────────
+// 找到下方 CATEGORIES 陣列，修改每個物件的 name 和 icon
+// isFinal: true 代表最終挑戰題（只能有一個）
+// ════════════════════════════════════════════════════════
+const CATEGORIES = [
+  { id: "cat_history",  name: "歷史",  icon: "📜", isFinal: false },
+  { id: "cat_geo",      name: "地理",  icon: "🌏", isFinal: false },
+  { id: "cat_science",  name: "科學",  icon: "🔬", isFinal: false },
+  { id: "cat_art",      name: "藝術",  icon: "🎨", isFinal: false },
+  { id: "cat_music",    name: "音樂",  icon: "🎵", isFinal: false },
+  { id: "cat_sports",   name: "體育",  icon: "⚽", isFinal: false },
+  { id: "cat_lit",      name: "文學",  icon: "📚", isFinal: false },
+  { id: "cat_general",  name: "常識",  icon: "💡", isFinal: false },
+  { id: "cat_movie",    name: "電影",  icon: "🎬", isFinal: false },
+  { id: "cat_food",     name: "美食",  icon: "🍜", isFinal: false },
+  { id: "cat_final",    name: "最終挑戰", icon: "👑", isFinal: true },
+];
+
+// ════════════════════════════════════════════════════════
+// ── 如何修改道具卡 ────────────────────────────────────
+// 找到下方 POWERUPS 陣列，修改每個物件：
+//   id     : 唯一識別碼（不要改）
+//   name   : 道具卡顯示名稱
+//   icon   : 圖示 Emoji
+//   effect : 長按顯示的效果說明文字
+// ════════════════════════════════════════════════════════
+const POWERUPS = [
+  { id: "pu_skip",     name: "跳過此題", icon: "⏭️", effect: "跳過目前題目，系統重新從同類別抽取一道新題目（不計失敗）" },
+  { id: "pu_hint",     name: "提示",     icon: "💡", effect: "主持人提供一個方向性提示，但不直接說出答案" },
+  { id: "pu_redraw",   name: "換題",     icon: "🔄", effect: "換一道同類別的新題目（此次不扣分，視為重來）" },
+];
+
+// ════════════════════════════════════════════════════════
+// ── 如何修改題目 ──────────────────────────────────────
+// 找到下方 QUESTIONS 物件，每個 key 對應一個類別 id
+// 每個類別底下是題目陣列，每題格式：
+//   type: "mc"(選擇題) | "qa"(問答題) | "music"(音樂題)
+//   question: 題目文字
+//   options: 選項陣列（僅 mc 使用）
+//   answer: mc 填正確選項的 index(0-3)；qa/music 填答案文字
+//   audioUrl: 音樂題填 MP3 的網址（qa/mc 可省略）
+// ════════════════════════════════════════════════════════
+const QUESTIONS = {
+  cat_history: [
+    { id:"h1", type:"mc", question:"台灣在哪一年舉辦首次總統直選？", options:["1992年","1996年","2000年","2004年"], answer:1 },
+    { id:"h2", type:"qa", question:"清朝將台灣納入版圖是在哪一年？", answer:"1683年" },
+    { id:"h3", type:"mc", question:"台灣日治時期始於哪一年？", options:["1895年","1900年","1910年","1920年"], answer:0 },
+    { id:"h4", type:"qa", question:"台灣光復節是幾月幾日？", answer:"10月25日" },
+  ],
+  cat_geo: [
+    { id:"g1", type:"mc", question:"台灣最高峰玉山海拔約多少公尺？", options:["3,500m","3,952m","4,100m","2,800m"], answer:1 },
+    { id:"g2", type:"qa", question:"台灣面積最大的縣市是哪一個？", answer:"花蓮縣" },
+    { id:"g3", type:"mc", question:"台灣本島最長的河流是哪條？", options:["淡水河","高屏溪","秀姑巒溪","大甲溪"], answer:1 },
+    { id:"g4", type:"qa", question:"台灣最南端的縣市是哪一個？", answer:"屏東縣" },
+  ],
+  cat_science: [
+    { id:"s1", type:"mc", question:"水的化學式是什麼？", options:["H2O","CO2","NaCl","O2"], answer:0 },
+    { id:"s2", type:"qa", question:"光在真空中每秒前進約幾公里？", answer:"約30萬公里（299,792公里）" },
+    { id:"s3", type:"mc", question:"人體最大的器官是什麼？", options:["肺","心臟","皮膚","肝臟"], answer:2 },
+    { id:"s4", type:"qa", question:"DNA雙螺旋結構由哪兩位科學家在1953年發現？", answer:"Watson 和 Crick（華生與克里克）" },
+  ],
+  cat_art: [
+    { id:"a1", type:"mc", question:"梵谷的名作《星夜》目前收藏在哪個博物館？", options:["羅浮宮","大都會博物館","紐約現代藝術博物館","奧賽美術館"], answer:2 },
+    { id:"a2", type:"qa", question:"達文西的名畫《蒙娜麗莎》目前展示在哪個城市？", answer:"巴黎（羅浮宮）" },
+    { id:"a3", type:"mc", question:"印象派代表畫家莫內最知名的系列作品主題是？", options:["向日葵","睡蓮","星夜","吶喊"], answer:1 },
+    { id:"a4", type:"qa", question:"台灣故宮博物院最著名的鎮館之寶之一是什麼？", answer:"翠玉白菜" },
+  ],
+  cat_music: [
+    { id:"m1", type:"qa", question:"台灣著名民謠《望春風》由哪位作曲家創作？", answer:"鄧雨賢" },
+    { id:"m2", type:"mc", question:"貝多芬共創作了幾首交響曲？", options:["7首","8首","9首","10首"], answer:2 },
+    { id:"m3", type:"qa", question:"「流行音樂之王」麥可傑克森最知名的舞步叫什麼？", answer:"月球漫步（Moonwalk）" },
+    { id:"m4", type:"mc", question:"吉他通常有幾條弦？", options:["4條","5條","6條","7條"], answer:2 },
+  ],
+  cat_sports: [
+    { id:"sp1", type:"mc", question:"足球世界盃每隔幾年舉辦一次？", options:["2年","4年","3年","5年"], answer:1 },
+    { id:"sp2", type:"qa", question:"奧運五環旗的五種顏色分別是哪些？", answer:"藍、黑、紅、黃、綠" },
+    { id:"sp3", type:"mc", question:"NBA是哪個運動的職業聯賽？", options:["棒球","美式足球","籃球","冰上曲棍球"], answer:2 },
+    { id:"sp4", type:"qa", question:"台灣棒球曾在哪一年首度奪得世界少棒冠軍？", answer:"1969年" },
+  ],
+  cat_lit: [
+    { id:"l1", type:"mc", question:"《西遊記》的主角孫悟空從哪塊石頭中誕生？", options:["崑崙山","花果山","泰山","華山"], answer:1 },
+    { id:"l2", type:"qa", question:"莎士比亞的四大悲劇包含哪四部？", answer:"哈姆雷特、奧賽羅、李爾王、馬克白" },
+    { id:"l3", type:"mc", question:"《紅樓夢》的作者是誰？", options:["施耐庵","吳承恩","曹雪芹","羅貫中"], answer:2 },
+    { id:"l4", type:"qa", question:"台灣著名作家三毛的本名是什麼？", answer:"陳懋平（後改名陳平）" },
+  ],
+  cat_general: [
+    { id:"gn1", type:"mc", question:"聯合國總部位於哪個城市？", options:["日內瓦","倫敦","紐約","巴黎"], answer:2 },
+    { id:"gn2", type:"qa", question:"世界上面積最大的國家是哪個？", answer:"俄羅斯" },
+    { id:"gn3", type:"mc", question:"1 GB（Gigabyte）等於多少 MB？", options:["100MB","512MB","1024MB","2048MB"], answer:2 },
+    { id:"gn4", type:"qa", question:"人類正常體溫約為幾度攝氏？", answer:"約37°C" },
+  ],
+  cat_movie: [
+    { id:"mv1", type:"mc", question:"電影《鐵達尼號》於哪一年上映？", options:["1995年","1996年","1997年","1998年"], answer:2 },
+    { id:"mv2", type:"qa", question:"宮崎駿創立的動畫公司名稱是什麼？", answer:"吉卜力工作室（Studio Ghibli）" },
+    { id:"mv3", type:"mc", question:"《阿凡達》導演詹姆斯卡麥隆的另一部知名科幻電影是？", options:["星際大戰","魔鬼終結者","侏儸紀公園","駭客任務"], answer:1 },
+    { id:"mv4", type:"qa", question:"奧斯卡金像獎的正式名稱是什麼？", answer:"美國電影藝術與科學學院獎" },
+  ],
+  cat_food: [
+    { id:"f1", type:"mc", question:"台灣著名小吃「蚵仔煎」的主要食材蚵仔是指什麼？", options:["蛤蜊","牡蠣（生蠔）","蝦子","花枝"], answer:1 },
+    { id:"f2", type:"qa", question:"義大利麵的義大利文原文是什麼？", answer:"Pasta（帕斯塔）" },
+    { id:"f3", type:"mc", question:"「珍珠奶茶」發源自台灣哪個城市？", options:["台北","高雄","台中","台南"], answer:2 },
+    { id:"f4", type:"qa", question:"壽司的主要食材醋飯中加入了哪些調味料？", answer:"醋、糖、鹽" },
+  ],
+  cat_final: [
+    { id:"fin1", type:"mc", question:"【最終挑戰】台灣是全球第幾大半導體晶圓代工生產地？", options:["第一","第二","第三","第四"], answer:0 },
+    { id:"fin2", type:"qa", question:"【最終挑戰】請說出台灣憲法正式名稱及施行年份。", answer:"中華民國憲法，1947年（民國36年）施行" },
+    { id:"fin3", type:"mc", question:"【最終挑戰】台積電（TSMC）由哪位創辦人在哪一年成立？", options:["曹興誠，1990年","張忠謀，1987年","施振榮，1985年","郭台銘，1989年"], answer:1 },
+  ],
+};
+
+// ── STATE ────────────────────────────────────────────────
+let myRole = null;      // 'host' | 'contestant'
+let myName = '';
+let myId = '';
+let roomCode = '';
+let dbRoom = null;      // firebase ref
+let currentCatId = null;
+let currentQuestion = null;
+let pendingPowerupId = null;
+let isPlaying = false;
+let audioEl = null;
+let usedPowerups = { pu_skip: false, pu_hint: false, pu_redraw: false };
+let completedCats = [];
+let usedQIds = [];      // local mirror (authoritative copy in Firebase)
+
+// ── HELPERS ──────────────────────────────────────────────
+function genCode() {
+  return Math.random().toString(36).slice(2,8).toUpperCase();
+}
+function genId() {
+  return Math.random().toString(36).slice(2,12);
+}
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// ── LOBBY ────────────────────────────────────────────────
+window.showRolePanel = function(role) {
+  document.getElementById('host-panel').style.display = 'none';
+  document.getElementById('contestant-panel').style.display = 'none';
+  document.getElementById(role + '-panel').style.display = 'block';
+};
+
+window.createRoom = async function() {
+  const name = document.getElementById('host-name').value.trim();
+  if (!name) { toast('請輸入名稱'); return; }
+  myRole = 'host';
+  myName = name;
+  myId = genId();
+  roomCode = genCode();
+  dbRoom = ref(db, 'rooms/' + roomCode);
+  await set(dbRoom, {
+    host: { id: myId, name: myName },
+    status: 'waiting',
+    usedQIds: {},
+    players: { [myId]: { name: myName, role: 'host', completedCats: {}, score: 0 } }
+  });
+  document.getElementById('room-code-text').textContent = roomCode;
+  document.getElementById('room-code-area').style.display = 'block';
+};
+
+window.goWaiting = function() {
+  document.getElementById('waiting-room-code').textContent = roomCode;
+  document.getElementById('host-start-btn').style.display = 'block';
+  document.getElementById('waiting-for-host').style.display = 'none';
+  showScreen('waiting');
+  listenWaiting();
+};
+
+window.joinRoom = async function() {
+  const name = document.getElementById('contestant-name').value.trim();
+  const code = document.getElementById('room-code-input').value.trim().toUpperCase();
+  if (!name) { toast('請輸入名稱'); return; }
+  if (!code) { toast('請輸入房間碼'); return; }
+  const snap = await get(ref(db, 'rooms/' + code));
+  if (!snap.exists()) { toast('找不到此房間碼，請確認'); return; }
+  if (snap.val().status !== 'waiting') { toast('此房間已開始遊戲'); return; }
+  myRole = 'contestant';
+  myName = name;
+  myId = genId();
+  roomCode = code;
+  dbRoom = ref(db, 'rooms/' + code);
+  await update(ref(db, 'rooms/' + code + '/players/' + myId), {
+    name: myName, role: 'contestant', completedCats: {}, score: 0
+  });
+  document.getElementById('waiting-room-code').textContent = roomCode;
+  document.getElementById('host-start-btn').style.display = 'none';
+  document.getElementById('waiting-for-host').style.display = 'block';
+  showScreen('waiting');
+  listenWaiting();
+};
+
+function listenWaiting() {
+  onValue(ref(db, 'rooms/' + roomCode + '/players'), snap => {
+    const players = snap.val() || {};
+    const list = document.getElementById('waiting-player-list');
+    list.innerHTML = Object.values(players).map(p => `
+      <div class="player-item ${p.role==='host'?'host':''}">
+        <div class="dot"></div>
+        <span>${p.name}</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--text2)">${p.role==='host'?'主持人':'參賽者'}</span>
+      </div>`).join('');
+  });
+  onValue(ref(db, 'rooms/' + roomCode + '/status'), snap => {
+    if (snap.val() === 'playing') {
+      if (myRole === 'host') enterHostGame();
+      else enterContestantGame();
+    }
+  });
+}
+
+window.startGame = async function() {
+  await update(dbRoom, { status: 'playing', currentQuestion: null });
+};
+
+// ── CONTESTANT GAME ──────────────────────────────────────
+function enterContestantGame() {
+  document.getElementById('cg-name').textContent = myName;
+  showScreen('contestant-game');
+  renderCatGrid();
+  renderPowerups();
+  listenContestant();
+}
+
+function renderCatGrid() {
+  const grid = document.getElementById('cat-grid');
+  const allDone = completedCats.length >= 10;
+  grid.innerHTML = CATEGORIES.map(cat => {
+    const done = completedCats.includes(cat.id);
+    const isFinalCat = cat.isFinal;
+    const locked = isFinalCat && !allDone;
+    const unlocked = isFinalCat && allDone;
+    let cls = 'cat-cell';
+    if (done) cls += ' done';
+    else if (locked) cls += ' locked';
+    if (isFinalCat) cls += ' final';
+    if (isFinalCat && unlocked && !done) cls += ' unlocked';
+    const check = done ? '<span class="cat-check">✅</span>' : (locked ? '<span class="cat-check">🔒</span>' : '');
+    return `<div class="${cls}" onclick="selectCategory('${cat.id}')">
+      ${check}
+      <div class="cat-icon">${cat.icon}</div>
+      <div class="cat-name">${cat.name}</div>
+    </div>`;
+  }).join('');
+  const done = completedCats.length;
+  document.getElementById('cg-progress').textContent = `已完成 ${done} / 10`;
+}
+
+function renderPowerups() {
+  const row = document.getElementById('powerups-row');
+  row.innerHTML = POWERUPS.map(p => `
+    <div class="powerup ${usedPowerups[p.id] ? 'used' : ''}" 
+         onclick="clickPowerup('${p.id}')"
+         ontouchstart="touchPowerup(event,'${p.id}')" ontouchend="touchEnd()">
+      <div class="tooltip">${p.effect}</div>
+      <div class="powerup-icon">${p.icon}</div>
+      <div class="powerup-name">${p.name}</div>
+    </div>`).join('');
+}
+
+function listenContestant() {
+  onValue(ref(db, 'rooms/' + roomCode + '/usedQIds'), snap => {
+    usedQIds = snap.val() ? Object.values(snap.val()) : [];
+  });
+  onValue(ref(db, 'rooms/' + roomCode + '/players/' + myId + '/completedCats'), snap => {
+    completedCats = snap.val() ? Object.values(snap.val()) : [];
+    renderCatGrid();
+  });
+  onValue(ref(db, 'rooms/' + roomCode + '/judgement/' + myId), snap => {
+    const val = snap.val();
+    if (!val) return;
+    if (val.result === 'correct') showResult(true);
+    else if (val.result === 'wrong') showResult(false);
+  });
+}
+
+window.selectCategory = async function(catId) {
+  const cat = CATEGORIES.find(c => c.id === catId);
+  if (!cat) return;
+  if (completedCats.includes(catId)) return;
+  const allDone = completedCats.length >= 10;
+  if (cat.isFinal && !allDone) { toast('先完成 10 個類別才能挑戰最終題！'); return; }
+
+  currentCatId = catId;
+  const pool = QUESTIONS[catId] || [];
+  const available = pool.filter(q => !usedQIds.includes(q.id));
+  if (available.length === 0) { toast('此類別題目已全部出過，請告知主持人'); return; }
+
+  currentQuestion = available[Math.floor(Math.random() * available.length)];
+  await update(ref(db, 'rooms/' + roomCode + '/usedQIds'), { [currentQuestion.id]: currentQuestion.id });
+  await update(ref(db, 'rooms/' + roomCode + '/currentQuestion'), {
+    id: currentQuestion.id,
+    type: currentQuestion.type,
+    question: currentQuestion.question,
+    options: currentQuestion.options || null,
+    answer: currentQuestion.answer,
+    catId: catId,
+    playerName: myName,
+    playerId: myId,
+  });
+
+  showQuestionArea(currentQuestion);
+};
+
+function showQuestionArea(q) {
+  document.getElementById('idle-msg').style.display = 'none';
+  document.getElementById('question-area').style.display = 'block';
+  document.getElementById('waiting-judge').style.display = 'none';
+  document.getElementById('submit-btn').style.display = 'none';
+
+  const badge = document.getElementById('q-type-badge');
+  if (q.type === 'mc') { badge.textContent = '選擇題'; badge.className = 'q-type-badge qb-mc'; }
+  else if (q.type === 'qa') { badge.textContent = '問答題'; badge.className = 'q-type-badge qb-qa'; }
+  else { badge.textContent = '音樂題'; badge.className = 'q-type-badge qb-music'; }
+
+  document.getElementById('q-text').textContent = q.question;
+  document.getElementById('mc-options').style.display = 'none';
+  document.getElementById('qa-area').style.display = 'none';
+  document.getElementById('music-area').style.display = 'none';
+
+  if (q.type === 'mc') {
+    const grid = document.getElementById('mc-options');
+    grid.style.display = 'grid';
+    grid.innerHTML = q.options.map((opt, i) => `
+      <button class="mc-btn" id="mc-${i}" onclick="selectMC(${i})">
+        <span class="letter-badge">${['A','B','C','D'][i]}</span>
+        <span>${opt}</span>
+      </button>`).join('');
+    document.getElementById('submit-btn').style.display = 'inline-block';
+  } else if (q.type === 'qa') {
+    document.getElementById('qa-area').style.display = 'block';
+    document.getElementById('waiting-judge').style.display = 'block';
+  } else if (q.type === 'music') {
+    document.getElementById('music-area').style.display = 'block';
+    document.getElementById('music-status').textContent = '準備播放';
+    if (audioEl) { audioEl.pause(); audioEl = null; }
+    if (q.audioUrl) {
+      audioEl = new Audio(q.audioUrl);
+      audioEl.onended = () => { isPlaying = false; document.getElementById('play-btn').textContent = '▶'; document.getElementById('music-status').textContent = '播放完畢'; };
+    }
+    document.getElementById('waiting-judge').style.display = 'block';
+  }
+}
+
+window.selectMC = function(i) {
+  document.querySelectorAll('.mc-btn').forEach((b,j) => b.classList.toggle('selected', j===i));
+};
+
+window.submitAnswer = async function() {
+  document.getElementById('submit-btn').style.display = 'none';
+  document.getElementById('waiting-judge').style.display = 'block';
+  document.querySelectorAll('.mc-btn').forEach(b => b.disabled = true);
+  await remove(ref(db, 'rooms/' + roomCode + '/judgement/' + myId));
+};
+
+window.togglePlay = function() {
+  if (!audioEl) { toast('此題無音頻檔案'); return; }
+  if (isPlaying) { audioEl.pause(); isPlaying = false; document.getElementById('play-btn').textContent = '▶'; document.getElementById('music-status').textContent = '已暫停'; }
+  else { audioEl.play(); isPlaying = true; document.getElementById('play-btn').textContent = '⏸'; document.getElementById('music-status').textContent = '播放中…'; }
+};
+
+// ── POWERUPS ──────────────────────────────────────────────
+window.clickPowerup = function(id) {
+  if (usedPowerups[id]) return;
+  if (!currentQuestion) { toast('請先選擇類別與題目'); return; }
+  const pu = POWERUPS.find(p => p.id === id);
+  pendingPowerupId = id;
+  document.getElementById('pu-modal-title').textContent = `使用「${pu.name}」？`;
+  document.getElementById('pu-modal-desc').textContent = pu.effect;
+  document.getElementById('powerup-modal').classList.add('open');
+};
+let touchTimer = null;
+window.touchPowerup = function(e, id) {
+  touchTimer = setTimeout(() => {
+    const pu = POWERUPS.find(p => p.id === id);
+    toast(pu ? pu.effect : '');
+  }, 600);
+};
+window.touchEnd = function() { clearTimeout(touchTimer); };
+window.closePowerupModal = function() {
+  document.getElementById('powerup-modal').classList.remove('open');
+  pendingPowerupId = null;
+};
+window.confirmPowerup = async function() {
+  if (!pendingPowerupId) return;
+  usedPowerups[pendingPowerupId] = true;
+  renderPowerups();
+  closePowerupModal();
+  toast('道具卡已使用！');
+  if (pendingPowerupId === 'pu_skip' || pendingPowerupId === 'pu_redraw') {
+    await remove(ref(db, 'rooms/' + roomCode + '/judgement/' + myId));
+    await selectCategory(currentCatId);
+  }
+};
+
+// ── RESULT ───────────────────────────────────────────────
+function showResult(correct) {
+  const overlay = document.getElementById('result-overlay');
+  document.getElementById('result-icon').textContent = correct ? '🎉' : '😢';
+  document.getElementById('result-text').textContent = correct ? '答對了！' : '答錯了！';
+  document.getElementById('result-text').className = 'result-text ' + (correct ? 'correct' : 'wrong');
+  overlay.classList.add('open');
+  if (correct) {
+    update(ref(db, 'rooms/' + roomCode + '/players/' + myId + '/completedCats'), { [currentCatId]: currentCatId });
+  }
+}
+window.closeResult = async function() {
+  document.getElementById('result-overlay').classList.remove('open');
+  document.getElementById('question-area').style.display = 'none';
+  document.getElementById('idle-msg').style.display = 'block';
+  currentQuestion = null;
+  currentCatId = null;
+  await remove(ref(db, 'rooms/' + roomCode + '/judgement/' + myId));
+  await update(ref(db, 'rooms/' + roomCode), { currentQuestion: null });
+};
+
+// ── HOST GAME ────────────────────────────────────────────
+function enterHostGame() {
+  showScreen('host-game');
+  listenHost();
+}
+
+function listenHost() {
+  onValue(ref(db, 'rooms/' + roomCode + '/currentQuestion'), snap => {
+    const q = snap.val();
+    if (!q) {
+      document.getElementById('host-no-question').style.display = 'block';
+      document.getElementById('host-question-panel').style.display = 'none';
+      document.getElementById('host-current-player').textContent = '等待參賽者選題…';
+      return;
+    }
+    document.getElementById('host-no-question').style.display = 'none';
+    document.getElementById('host-question-panel').style.display = 'block';
+    document.getElementById('host-current-player').textContent = `${q.playerName} 正在作答`;
+
+    const badge = document.getElementById('host-q-type-badge');
+    if (q.type === 'mc') { badge.textContent = '選擇題'; badge.className = 'q-type-badge qb-mc'; }
+    else if (q.type === 'qa') { badge.textContent = '問答題'; badge.className = 'q-type-badge qb-qa'; }
+    else { badge.textContent = '音樂題'; badge.className = 'q-type-badge qb-music'; }
+
+    document.getElementById('host-q-text').textContent = q.question;
+    const ans = q.type === 'mc' ? ['A','B','C','D'][q.answer] + '. ' + (QUESTIONS[q.catId]?.find(x=>x.id===q.id)?.options?.[q.answer] || q.answer) : q.answer;
+    document.getElementById('host-answer').textContent = ans;
+  });
+
+  onValue(ref(db, 'rooms/' + roomCode + '/players'), snap => {
+    const players = snap.val() || {};
+    const list = document.getElementById('players-overview-list');
+    list.innerHTML = Object.values(players)
+      .filter(p => p.role === 'contestant')
+      .map(p => {
+        const done = p.completedCats ? Object.keys(p.completedCats).length : 0;
+        const dots = CATEGORIES.filter(c=>!c.isFinal).map(c => {
+          const isDone = p.completedCats && p.completedCats[c.id];
+          return `<div class="pdot ${isDone?'done':''}" title="${c.name}"></div>`;
+        }).join('') + `<div class="pdot ${p.completedCats?.cat_final?'final':''}" title="最終挑戰"></div>`;
+        return `<div class="player-progress">
+          <span>${p.name}</span>
+          <div class="progress-dots">${dots}</div>
+          <span style="font-size:12px;color:var(--text2)">${done}/10</span>
+        </div>`;
+      }).join('') || '<div style="color:var(--text2);font-size:13px;">尚無參賽者</div>';
+  });
+}
+
+window.judgeAnswer = async function(correct) {
+  const snap = await get(ref(db, 'rooms/' + roomCode + '/currentQuestion'));
+  const q = snap.val();
+  if (!q) return;
+  await set(ref(db, 'rooms/' + roomCode + '/judgement/' + q.playerId), {
+    result: correct ? 'correct' : 'wrong',
+    ts: Date.now()
+  });
+  toast(correct ? '✅ 已判定：答對' : '❌ 已判定：答錯');
+};
+
+window.redrawQuestion = async function() {
+  const snap = await get(ref(db, 'rooms/' + roomCode + '/currentQuestion'));
+  const q = snap.val();
+  if (!q) return;
+  const pool = QUESTIONS[q.catId] || [];
+  const usedSnap = await get(ref(db, 'rooms/' + roomCode + '/usedQIds'));
+  const used = usedSnap.val() ? Object.values(usedSnap.val()) : [];
+  const available = pool.filter(x => !used.includes(x.id) && x.id !== q.id);
+  if (available.length === 0) { toast('此類別已無其他題目可換'); return; }
+  const newQ = available[Math.floor(Math.random() * available.length)];
+  await update(ref(db, 'rooms/' + roomCode + '/usedQIds'), { [newQ.id]: newQ.id });
+  await update(ref(db, 'rooms/' + roomCode + '/currentQuestion'), {
+    id: newQ.id, type: newQ.type, question: newQ.question,
+    options: newQ.options || null, answer: newQ.answer,
+  });
+  toast('已重新抽題');
+};
+</script>
+</body>
+</html>
