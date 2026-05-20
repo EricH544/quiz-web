@@ -497,12 +497,12 @@ const QUESTIONS = {
   ],
   // 類別五：音樂 (E) ← 音樂類別，僅音樂題
   cat_music: [
-    { id:"E1", type:"music_qa", songName:"望春風", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", question:"這首歌的歌名是什麼？", answer:"望春風" },
-    { id:"E2", type:"music_mc", songName:"月亮代表我的心", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", question:"這首歌是哪位歌手最具代表性的作品？", options:["鄧麗君","蔡琴","費玉清","張惠妹"], answer:0 },
-    { id:"E3", type:"music_qa", songName:"愛拚才會贏", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", question:"這首歌的歌名是什麼？", answer:"愛拚才會贏" },
-    { id:"E4", type:"music_mc", songName:"甜蜜蜜", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", question:"這首歌的演唱者是誰？", options:["鳳飛飛","鄧麗君","江蕙","蔡依林"], answer:1 },
-    { id:"E5", type:"music_qa", songName:"夜來香", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", question:"這首歌的歌名是什麼？", answer:"夜來香" },
-    { id:"E6", type:"music_mc", songName:"高山青", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", question:"這首歌描述的是台灣哪個地方的景色？", options:["日月潭","阿里山","玉山","太魯閣"], answer:1 },
+    { id:"E1", type:"music_qa", songName:"望春風", language:"中文", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", question:"這首歌的歌名是什麼？", answer:"望春風" },
+    { id:"E2", type:"music_mc", songName:"月亮代表我的心", language:"中文", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", question:"這首歌是哪位歌手最具代表性的作品？", options:["鄧麗君","蔡琴","費玉清","張惠妹"], answer:0 },
+    { id:"E3", type:"music_qa", songName:"夜に駆ける", language:"日文", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", question:"這首歌的歌名是什麼？", answer:"愛拚才會贏" },
+    { id:"E4", type:"music_mc", songName:"눈의 꽃", language:"韓文", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", question:"這首歌的演唱者是誰？", options:["鳳飛飛","鄧麗君","江蕙","蔡依林"], answer:1 },
+    { id:"E5", type:"music_qa", songName:"Bohemian Rhapsody", language:"英文", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", question:"這首歌的歌名是什麼？", answer:"夜來香" },
+    { id:"E6", type:"music_mc", songName:"高山青", language:"中文", audioUrl:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", question:"這首歌描述的是台灣哪個地方的景色？", options:["日月潭","阿里山","玉山","太魯閣"], answer:1 },
   ],
   // 類別六：體育 (F)
   cat_sports: [
@@ -571,13 +571,12 @@ function genId(){ return Math.random().toString(36).slice(2,12); }
 function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800); }
 
-function maskSongName(name){
-  const starCount = name.replace(/\s/g,'').length;
-  let lang = '英文';
-  if(/[\u4e00-\u9fff]/.test(name)) lang = '中文';
-  else if(/[\u3040-\u309f\u30a0-\u30ff]/.test(name)) lang = '日文';
-  else if(/[\uac00-\ud7af]/.test(name)) lang = '韓文';
-  return '*'.repeat(starCount) + '（' + lang + '）';
+function maskSongName(name, language){
+  // 只把英文字母、數字、中日韓文字替換成 *
+  // 空格、標點、特殊符號全部保留
+  const masked = name.replace(/[\w\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g, '*');
+  const lang = language || '不明';
+  return masked + '（' + lang + '）';
 }
 
 // ── LOBBY ────────────────────────────────────────────────
@@ -876,7 +875,7 @@ function showMusicPickArea(){
   const grid=document.getElementById('music-sel-grid');
   grid.innerHTML=musicPickOptions.map((q,i)=>`
     <button class="music-sel-btn" id="mpick-${i}" onclick="selectMusicSong(${i})">
-      ${maskSongName(q.songName)}
+      ${maskSongName(q.songName, q.language)}
     </button>`).join('');
   selectedMusicIdx=null;
 }
