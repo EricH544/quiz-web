@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>百萬挑戰 Quiz</title>
+<title>民宿宅學堂 Quiz</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -184,7 +184,7 @@ body { background: var(--dark); color: var(--text); font-family: 'Noto Sans TC',
 
 <!-- LOBBY -->
 <div class="screen active" id="lobby">
-  <div class="lobby-title">百萬挑戰</div>
+  <div class="lobby-title">民宿宅學堂</div>
   <div class="lobby-sub">選擇你的角色開始遊戲</div>
   <div class="role-cards">
     <div class="role-card" onclick="showRolePanel('host')">
@@ -572,13 +572,11 @@ function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.class
 function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800); }
 
 function maskSongName(name){
-  // Replace each character (except spaces and brackets) with *
-  // Format: *** (語言)
-  const isChinese = /[\u4e00-\u9fff]/.test(name);
-  const stars = name.replace(/[^\s（）()]/g,'*');
-  const lang = isChinese ? '中文' : '英文';
-  // Just show star count and language hint
   const starCount = name.replace(/\s/g,'').length;
+  let lang = '英文';
+  if(/[\u4e00-\u9fff]/.test(name)) lang = '中文';
+  else if(/[\u3040-\u309f\u30a0-\u30ff]/.test(name)) lang = '日文';
+  else if(/[\uac00-\ud7af]/.test(name)) lang = '韓文';
   return '*'.repeat(starCount) + '（' + lang + '）';
 }
 
